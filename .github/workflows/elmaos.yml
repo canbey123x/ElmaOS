@@ -1,0 +1,57 @@
+name: ElmaOS ISO Derle
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Derleme profili
+        type: choice
+        options:
+          - desktop
+          - base
+        default: desktop
+
+permissions:
+  contents: read
+
+jobs:
+  iso:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Debian 13 içinde ISO derle
+        env:
+          PROFILE: ${{ inputs.profile }}
+        run: |
+          df -h "$GITHUB_WORKSPACE"
+          docker run --rm --privileged --platform linux/amd64 \
+            --mount "type=bind,source=$GITHUB_WORKSPACE,target=/src" \
+            --env PROFILE --workdir /src debian:13 bash -euc '
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update
+              apt-get install -y live-build debootstrap xorriso squashfs-tools isolinux syslinux-common grub-pc-bin grub-efi-amd64-bin mtools
+              bash build.sh "$PROFILE"
+              cd dist
+              sha256sum -c ./*.sha256
+              for iso in ./*.iso; do
+                xorriso -indev "$iso" -report_el_torito plain
+              done
+            '
+      - name: ISO ve SHA-256 dosyasını yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ElmaOS-${{ inputs.profile }}
+          path: |
+            dist/*.iso
+            dist/*.sha256
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+      - name: Başarısız derlemenin günlüğünü yükle
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ElmaOS-derleme-gunlugu
+          path: build/*.log
+          if-no-files-found: ignore

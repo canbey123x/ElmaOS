@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+<defs>
+ <linearGradient id="sky" x2=".75" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#ffe67a"/><stop offset=".45" stop-color="#78bbf2"/><stop offset="1" stop-color="#15397d"/></linearGradient>
+ <linearGradient id="sweep" x1=".2" x2=".72" y2="1"><stop stop-color="#ffe46b"/><stop offset=".48" stop-color="#ff8a20"/><stop offset="1" stop-color="#c12c27"/></linearGradient>
+ <linearGradient id="ridge" x1="0" x2=".8" y2="1"><stop stop-color="#fff293"/><stop offset=".52" stop-color="#ffb037"/><stop offset="1" stop-color="#f44821"/></linearGradient>
+ <linearGradient id="gold" x1=".68" x2=".2" y2="1"><stop stop-color="#ffe476"/><stop offset=".53" stop-color="#ff9926"/><stop offset="1" stop-color="#e64f23"/></linearGradient>
+</defs>
+<path fill="url(#sky)" d="M0 0h1920v1080H0z"/>
+<path fill="url(#sweep)" d="M350-60h1130c180 117 247 295 237 490l-373 650H678C581 759 238 423 137 209 74 77 223 34 350-60z"/>
+<path fill="url(#ridge)" d="M0 84c-42 255 494 333 843 608 195 153 358 287 415 388H550C392 803 193 666 0 573z"/>
+<path fill="url(#gold)" d="M1920 8c-198 153-317 348-442 594-91 177-153 345-207 478h649z"/>
+<path fill="url(#ridge)" d="M1920 667c-216 151-339 292-447 413h447z"/>
+<path fill="url(#gold)" d="M0 538c184 85 425 259 541 542H336C245 950 119 905 0 843z"/>
+</svg>

@@ -1,0 +1,16 @@
+[General]
+ActiveTextColor=45,45,45
+InactiveTextColor=95,95,95
+
+[Layout]
+TitleHeight=30
+ButtonWidth=16
+ButtonHeight=16
+ButtonSpacing=5
+TitleEdgeLeft=11
+TitleEdgeRight=11
+TitleEdgeTop=2
+TitleEdgeBottom=2
+BorderLeft=0
+BorderRight=0
+BorderBottom=1

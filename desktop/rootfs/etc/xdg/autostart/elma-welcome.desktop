@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=ElmaOS Hoş Geldiniz
+Exec=/usr/local/bin/elma-hesap --welcome
+OnlyShowIn=KDE;
+Terminal=false

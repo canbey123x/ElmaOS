@@ -1,0 +1,204 @@
+#!/usr/bin/python3
+import os
+import re
+import sqlite3
+import sys
+from pathlib import Path
+
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+from PyQt6.QtWidgets import (QApplication, QDialog, QFormLayout, QLabel,
+                             QLineEdit, QMessageBox, QPushButton, QVBoxLayout)
+
+os.umask(0o077)
+state = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share") / "elmaos"
+state.mkdir(parents=True, exist_ok=True, mode=0o700)
+state.chmod(0o700)
+db = sqlite3.connect(state / "hesap.sqlite3")
+db.execute("PRAGMA foreign_keys=ON")
+db.executescript("""
+CREATE TABLE IF NOT EXISTS profiles (
+    username TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL COLLATE NOCASE UNIQUE,
+    password TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS session (
+    slot INTEGER PRIMARY KEY CHECK (slot=1),
+    username TEXT REFERENCES profiles(username)
+);
+""")
+hasher = PasswordHasher()
+
+
+def active():
+    row = db.execute("SELECT username FROM session WHERE slot=1").fetchone()
+    return row[0] if row else None
+
+
+def select_profile(username):
+    with db:
+        db.execute("INSERT OR REPLACE INTO session VALUES (1, ?)", (username,))
+
+
+def verify(encoded, password):
+    try:
+        return hasher.verify(encoded, password)
+    except VerifyMismatchError:
+        return False
+
+
+def profile_fields(name, email):
+    name, email = name.strip(), email.strip()
+    if not name or len(name) > 100:
+        raise ValueError("Ad alanını doldurun.")
+    if len(email) > 254 or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        raise ValueError("Geçerli bir e-posta adresi girin.")
+    return name, email
+
+
+def new_password(password, confirmation):
+    if not 10 <= len(password) <= 256 or password != confirmation:
+        raise ValueError("Parolalar eşleşmeli ve 10–256 karakter olmalı.")
+    return hasher.hash(password)
+
+
+def form(title, fields, action):
+    dialog = QDialog(window)
+    dialog.setWindowTitle(title)
+    dialog.setMinimumWidth(400)
+    layout = QFormLayout(dialog)
+    inputs = []
+    for label, initial, secret in fields:
+        field = QLineEdit(initial)
+        field.setMaxLength(256)
+        if secret:
+            field.setEchoMode(QLineEdit.EchoMode.Password)
+        layout.addRow(label, field)
+        inputs.append(field)
+
+    def submit():
+        try:
+            action(*(field.text() for field in inputs))
+        except ValueError as error:
+            QMessageBox.warning(dialog, title, str(error))
+        except sqlite3.IntegrityError:
+            QMessageBox.warning(dialog, title, "Kullanıcı adı veya e-posta zaten kayıtlı.")
+        except sqlite3.Error as error:
+            QMessageBox.warning(dialog, title, str(error))
+        else:
+            dialog.accept()
+
+    save = QPushButton("Onayla")
+    save.clicked.connect(submit)
+    cancel = QPushButton("Vazgeç")
+    cancel.clicked.connect(dialog.reject)
+    layout.addRow(cancel, save)
+    dialog.exec()
+
+
+def create():
+    def save(name, username, email, password, confirmation):
+        name, email = profile_fields(name, email)
+        username = username.strip().lower()
+        if not re.fullmatch(r"[a-z0-9][a-z0-9_.-]{2,31}", username):
+            raise ValueError("Kullanıcı adı 3–32 karakter olmalı. a–z, 0–9, nokta, tire ve alt çizgi kullanılabilir.")
+        encoded = new_password(password, confirmation)
+        with db:
+            db.execute("INSERT INTO profiles VALUES (?, ?, ?, ?)", (username, name, email, encoded))
+            db.execute("INSERT OR REPLACE INTO session VALUES (1, ?)", (username,))
+
+    form("Elma Hesabı Oluştur", [
+        ("Ad", "", False), ("Kullanıcı adı", "", False), ("E-posta", "", False),
+        ("Parola", "", True), ("Parola doğrulama", "", True),
+    ], save)
+
+
+def login():
+    def authenticate(username, password):
+        username = username.strip().lower()
+        row = db.execute("SELECT password FROM profiles WHERE username=?", (username,)).fetchone()
+        if not row or not verify(row[0], password):
+            raise ValueError("Kullanıcı adı veya parola hatalı.")
+        select_profile(username)
+
+    form("Elma Hesabına Giriş Yap", [("Kullanıcı adı", "", False), ("Parola", "", True)], authenticate)
+
+
+def edit_profile():
+    username = active()
+    row = db.execute("SELECT name,email FROM profiles WHERE username=?", (username,)).fetchone()
+
+    def save(name, email):
+        name, email = profile_fields(name, email)
+        with db:
+            db.execute("UPDATE profiles SET name=?,email=? WHERE username=?", (name, email, username))
+
+    form("Profili Düzenle", [("Ad", row[0], False), ("E-posta", row[1], False)], save)
+
+
+def change_password():
+    username = active()
+
+    def save(old, password, confirmation):
+        row = db.execute("SELECT password FROM profiles WHERE username=?", (username,)).fetchone()
+        if not verify(row[0], old):
+            raise ValueError("Mevcut parola hatalı.")
+        encoded = new_password(password, confirmation)
+        with db:
+            cursor = db.execute("UPDATE profiles SET password=? WHERE username=? AND password=?",
+                                (encoded, username, row[0]))
+            if cursor.rowcount != 1:
+                raise ValueError("Parola başka bir oturumda değişti. Yeniden deneyin.")
+
+    form("Parola Değiştir", [
+        ("Mevcut parola", "", True), ("Yeni parola", "", True),
+        ("Parola doğrulama", "", True),
+    ], save)
+
+
+def sign_out():
+    with db:
+        db.execute("DELETE FROM session WHERE slot=1")
+
+
+def render():
+    while layout.count():
+        layout.takeAt(0).widget().deleteLater()
+    username = active()
+    title = QLabel("Elma Hesabı")
+    title.setStyleSheet("font-size: 27px; font-weight: 600;")
+    layout.addWidget(title)
+    details = QLabel("Bu hesap yalnızca bu ElmaOS kullanıcısının cihazında saklanır.")
+    details.setWordWrap(True)
+    layout.addWidget(details)
+    actions = [("Elma Hesabı Oluştur", create), ("Elma Hesabına Giriş Yap", login)]
+    if username:
+        name, email = db.execute("SELECT name,email FROM profiles WHERE username=?", (username,)).fetchone()
+        profile = QLabel()
+        from PyQt6.QtCore import Qt
+        profile.setTextFormat(Qt.TextFormat.PlainText)
+        profile.setText(f"{name}\n@{username}\n{email}")
+        layout.addWidget(profile)
+        actions = [("Profili Düzenle", edit_profile), ("Parola Değiştir", change_password),
+                   ("Oturumu Kapat", sign_out)]
+    for label, action in actions:
+        button = QPushButton(label)
+        button.clicked.connect(lambda checked=False, callback=action: (callback(), render()))
+        layout.addWidget(button)
+    close = QPushButton("Şimdilik Atla" if welcome and not username else "Kapat")
+    close.clicked.connect(window.accept)
+    layout.addWidget(close)
+
+
+welcome = "--welcome" in sys.argv
+marker = state / "welcome-complete"
+if welcome and marker.exists():
+    sys.exit(0)
+app = QApplication([sys.argv[0]])
+window = QDialog()
+window.setWindowTitle("ElmaOS 1.0 • Elma Hesabı")
+window.setMinimumWidth(440)
+layout = QVBoxLayout(window)
+render()
+window.exec()
+if welcome:
+    marker.touch()

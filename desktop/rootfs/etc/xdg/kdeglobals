@@ -1,0 +1,10 @@
+[KDE]
+LookAndFeelPackage=org.elmaos.desktop
+AnimationDurationFactor=1
+
+[General]
+ColorScheme=BreezeLight
+TerminalApplication=konsole
+
+[KDE Action Restrictions]
+shell_access=true

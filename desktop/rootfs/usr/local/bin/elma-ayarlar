@@ -1,0 +1,23 @@
+#!/usr/bin/python3
+import subprocess
+import sys
+
+from PyQt6.QtWidgets import QApplication, QDialog, QLabel, QPushButton, QVBoxLayout
+
+app = QApplication(sys.argv)
+dialog = QDialog()
+dialog.setWindowTitle("Elma Ayarlar")
+dialog.setMinimumWidth(370)
+layout = QVBoxLayout(dialog)
+layout.addWidget(QLabel("ElmaOS 1.0"))
+for label, command in [
+    ("Elma Hesabı", ["/usr/local/bin/elma-hesap"]),
+    ("Açık Tema", ["plasma-apply-colorscheme", "BreezeLight"]),
+    ("Koyu Tema", ["plasma-apply-colorscheme", "BreezeDark"]),
+    ("Plasma Sistem Ayarları", ["systemsettings"]),
+    ("Ekran ve Çözünürlük", ["kcmshell6", "kcm_kscreen"]),
+]:
+    button = QPushButton(label)
+    button.clicked.connect(lambda checked=False, args=command: subprocess.Popen(args))
+    layout.addWidget(button)
+dialog.exec()

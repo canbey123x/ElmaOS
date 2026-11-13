@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Elma Mağaza
+Exec=plasma-discover
+Icon=plasmadiscover
+Terminal=false
+Categories=System;

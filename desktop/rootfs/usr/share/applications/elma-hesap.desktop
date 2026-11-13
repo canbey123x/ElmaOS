@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Elma Hesabı
+Exec=/usr/local/bin/elma-hesap
+Icon=user-identity
+Terminal=false
+Categories=Settings;

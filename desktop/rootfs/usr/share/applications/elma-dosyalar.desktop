@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Elma Dosyalar
+Exec=dolphin
+Icon=system-file-manager
+Terminal=false
+Categories=Utility;

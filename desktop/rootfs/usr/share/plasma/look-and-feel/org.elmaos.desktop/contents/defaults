@@ -1,0 +1,14 @@
+[kdeglobals][KDE]
+widgetStyle=Breeze
+
+[kdeglobals][General]
+ColorScheme=BreezeLight
+
+[plasmarc][Theme]
+name=breeze
+
+[kwinrc][org.kde.kdecoration2]
+library=org.kde.kwin.aurorae
+theme=__aurorae__svg__Elma
+ButtonsOnLeft=XIA
+ButtonsOnRight=

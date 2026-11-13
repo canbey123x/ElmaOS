@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+# Override the vendor defaults using the standard /etc override.
+cat > /etc/os-release.elma <<'EOF'
+NAME="ElmaOS"
+PRETTY_NAME="ElmaOS 1.0"
+ID=elmaos
+ID_LIKE=debian
+VERSION_ID="1.0"
+VERSION="1.0"
+VERSION_CODENAME=trixie
+EOF
+mv -f /etc/os-release.elma /etc/os-release
+printf 'ElmaOS 1.0 \\n \\l\n' >/etc/issue
+sed -i 's/^# *tr_TR.UTF-8 UTF-8/tr_TR.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
+update-locale LANG=tr_TR.UTF-8

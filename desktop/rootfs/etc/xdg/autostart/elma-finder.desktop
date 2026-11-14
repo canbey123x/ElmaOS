@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Finder
+Exec=dolphin --new-window
+OnlyShowIn=KDE;
+Terminal=false

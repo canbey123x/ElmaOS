@@ -1,7 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=Elma Dosyalar
+Name=Finder
 Exec=dolphin
-Icon=system-file-manager
+Icon=/usr/share/pixmaps/elma-files.svg
+StartupWMClass=dolphin
 Terminal=false
 Categories=Utility;

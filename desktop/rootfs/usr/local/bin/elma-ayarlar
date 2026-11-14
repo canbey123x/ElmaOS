@@ -2,22 +2,93 @@
 import subprocess
 import sys
 
-from PyQt6.QtWidgets import QApplication, QDialog, QLabel, QPushButton, QVBoxLayout
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QLineEdit, QListWidget,
+                             QMessageBox, QPushButton, QVBoxLayout, QWidget)
+
+WALLPAPER = "/usr/share/wallpapers/ElmaVentura/contents/images/1920x1080.svg"
 
 app = QApplication(sys.argv)
-dialog = QDialog()
-dialog.setWindowTitle("Elma Ayarlar")
-dialog.setMinimumWidth(370)
-layout = QVBoxLayout(dialog)
-layout.addWidget(QLabel("ElmaOS 1.0"))
-for label, command in [
-    ("Elma Hesabı", ["/usr/local/bin/elma-hesap"]),
-    ("Açık Tema", ["plasma-apply-colorscheme", "BreezeLight"]),
-    ("Koyu Tema", ["plasma-apply-colorscheme", "BreezeDark"]),
-    ("Plasma Sistem Ayarları", ["systemsettings"]),
-    ("Ekran ve Çözünürlük", ["kcmshell6", "kcm_kscreen"]),
-]:
-    button = QPushButton(label)
-    button.clicked.connect(lambda checked=False, args=command: subprocess.Popen(args))
-    layout.addWidget(button)
-dialog.exec()
+window = QWidget()
+window.setWindowTitle("ElmaOS • Sistem Ayarları")
+window.resize(920, 650)
+layout = QHBoxLayout(window)
+layout.setContentsMargins(0, 0, 0, 0)
+layout.setSpacing(0)
+sidebar = QWidget()
+sidebar.setFixedWidth(245)
+sidebar.setStyleSheet("QWidget { background: palette(alternate-base); } QListWidget { border: 0; }")
+navigation = QVBoxLayout(sidebar)
+search = QLineEdit()
+search.setPlaceholderText("Ara")
+navigation.addWidget(search)
+sections = QListWidget()
+navigation.addWidget(sections)
+layout.addWidget(sidebar)
+details = QVBoxLayout()
+details.setContentsMargins(25, 20, 25, 24)
+layout.addLayout(details, 1)
+
+commands = {
+    "Elma Hesabı": [("Hesabı Yönet", ["/usr/local/bin/elma-hesap"])],
+    "Ağ": [("Bağlantıları Aç", ["kcmshell6", "kcm_networkmanagement"])],
+    "Ses": [("Ses Ayarlarını Aç", ["kcmshell6", "kcm_pulseaudio"])],
+    "Genel": [("Sistem Bilgisini Aç", ["kinfocenter"])],
+    "Görünüm": [("Açık", ["plasma-apply-colorscheme", "BreezeLight"]),
+                ("Koyu", ["plasma-apply-colorscheme", "BreezeDark"])],
+    "Ekranlar": [("Ekran Ayarlarını Aç", ["kcmshell6", "kcm_kscreen"])],
+    "Duvar Kâğıdı": [("Ventura Grafik’i Uygula", ["plasma-apply-wallpaperimage", WALLPAPER])],
+}
+sections.addItems(commands)
+
+
+def launch(command):
+    try:
+        subprocess.Popen(command)
+    except OSError as error:
+        QMessageBox.warning(window, "Ayar açılamadı", str(error))
+
+
+def show_section(name):
+    while details.count():
+        item = details.takeAt(0)
+        if item.widget():
+            item.widget().deleteLater()
+    if name not in commands:
+        return
+    heading = QLabel(name)
+    heading.setStyleSheet("font-size: 23px; font-weight: 600;")
+    details.addWidget(heading)
+    if name == "Duvar Kâğıdı":
+        preview = QLabel()
+        preview.setPixmap(QPixmap(WALLPAPER).scaled(
+            420, 235, Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation))
+        details.addWidget(preview, alignment=Qt.AlignmentFlag.AlignHCenter)
+        display = QLabel("ElmaOS Ekranı")
+        details.addWidget(display, alignment=Qt.AlignmentFlag.AlignHCenter)
+    for caption, command in commands[name]:
+        button = QPushButton(caption)
+        button.clicked.connect(lambda checked=False, args=command: launch(args))
+        details.addWidget(button)
+    details.addStretch()
+
+
+def filter_sections(query):
+    for index in range(sections.count()):
+        item = sections.item(index)
+        item.setHidden(query.casefold() not in item.text().casefold())
+    visible = next((sections.item(i) for i in range(sections.count())
+                    if not sections.item(i).isHidden()), None)
+    if visible is not None:
+        sections.setCurrentItem(visible)
+    else:
+        sections.setCurrentRow(-1)
+
+
+sections.currentTextChanged.connect(show_section)
+search.textChanged.connect(filter_sections)
+sections.setCurrentRow(sections.count() - 1)
+window.show()
+sys.exit(app.exec())

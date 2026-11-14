@@ -1,0 +1,7 @@
+[SddmGreeterTheme]
+Name=Elma Ventura
+Type=sddm-theme
+Version=1.0
+MainScript=Main.qml
+Theme-Id=elma-ventura
+QtVersion=6

@@ -31,15 +31,5 @@ dock.floating = true;
 dock.alignment = "center";
 dock.lengthMode = "fit";
 dock.opacity = "translucent";
-var tasks = dock.addWidget("org.kde.plasma.icontasks");
-tasks.currentConfigGroup = ["General"];
-tasks.writeConfig("launchers", [
-    "applications:elma-dosyalar.desktop",
-    "applications:elma-tarayici.desktop",
-    "applications:elma-terminal.desktop",
-    "applications:elma-notlar.desktop",
-    "applications:elma-magaza.desktop",
-    "applications:elma-ayarlar.desktop",
-    "applications:elma-hesap.desktop"
-].join(","));
+dock.addWidget("org.elmaos.dock");
 dock.addWidget("org.kde.plasma.trash");

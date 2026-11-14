@@ -21,8 +21,22 @@ Item {
    Rectangle {
      anchors.horizontalCenter: parent.horizontalCenter
      width: Math.max(70, root.height * 0.125); height: width; radius: width / 2
-     color: "#dddde2"; border.color: "#aaffffff"
-     Image { anchors.centerIn: parent; width: parent.width * 0.48; height: parent.height * 0.55; fillMode: Image.PreserveAspectFit; source: "file:///usr/share/pixmaps/elma-mark.svg" }
+     color: "#18171a"; border.color: "#aaffffff"
+     Repeater {
+       model: 12
+       Rectangle {
+         required property int index
+         anchors.centerIn: parent
+         width: parent.width * (0.28 + index * 0.055)
+         height: width; radius: width / 2
+         color: "transparent"; border.color: "#38ffffff"
+       }
+     }
+     Rectangle {
+       anchors.centerIn: parent
+       width: parent.width * 0.27; height: width; radius: width / 2; color: "#bc2030"
+       Rectangle { anchors.centerIn: parent; width: 4; height: 4; radius: 2; color: "#efdbc8" }
+     }
    }
    Text { anchors.horizontalCenter: parent.horizontalCenter; visible: users.count === 1; text: users.currentText || users.currentValue || ""; color: "white"; font.pixelSize: 17; font.bold: true }
    ComboBox { id: users; anchors.horizontalCenter: parent.horizontalCenter; visible: count !== 1; model: userModel; textRole: "realName"; valueRole: "name"; currentIndex: userModel.lastIndex >= 0 ? userModel.lastIndex : (count ? 0 : -1) }
@@ -41,9 +55,29 @@ Item {
  }
  Row {
    anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: parent.height * 0.045; spacing: 14
-   Button { text: "⏻  Kapat"; visible: sddm.canPowerOff; onClicked: sddm.powerOff() }
-   Button { text: "↻  Yeniden Başlat"; visible: sddm.canReboot; onClicked: sddm.reboot() }
-   Button { text: "☾  Uyku"; visible: sddm.canSuspend; onClicked: sddm.suspend() }
+   Repeater {
+     model: [{symbol:"⏻", label:"Kapat", allowed:sddm.canPowerOff},
+             {symbol:"↻", label:"Yeniden Başlat", allowed:sddm.canReboot},
+             {symbol:"☾", label:"Uyku", allowed:sddm.canSuspend}]
+     delegate: Button {
+       required property int index
+       required property var modelData
+       text: modelData.label
+       visible: modelData.allowed
+       width: 91; height: 53
+       background: Item {}
+       contentItem: Column {
+         spacing: 6
+         Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.symbol; color: "white"; font.pixelSize: 24 }
+         Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; color: "white"; font.pixelSize: 12 }
+       }
+       onClicked: {
+         if (index === 0) sddm.powerOff()
+         else if (index === 1) sddm.reboot()
+         else sddm.suspend()
+       }
+     }
+   }
  }
  Connections { target: sddm; function onLoginFailed() { root.errorText = "Giriş başarısız."; secret.clear(); secret.forceActiveFocus() } }
 }

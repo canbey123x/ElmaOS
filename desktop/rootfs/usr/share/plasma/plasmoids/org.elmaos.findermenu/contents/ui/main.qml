@@ -2,15 +2,23 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtCore
+import org.kde.taskmanager as TaskManager
 import org.kde.plasma.plasmoid
 
 PlasmoidItem {
     id: root
     preferredRepresentation: fullRepresentation
-    implicitWidth: 300
-    Layout.minimumWidth: 300
-    Layout.preferredWidth: 300
+    readonly property bool finderActive: {
+        const active = windows.activeTask
+        if (!active.valid) return true
+        const id = String(windows.data(active, TaskManager.AbstractTasksModel.AppId)).toLowerCase()
+        return id.includes("dolphin") || id.includes("elma-dosyalar")
+    }
+    TaskManager.TasksModel { id: windows }
+    Layout.minimumWidth: finderActive ? 300 : 0
+    Layout.preferredWidth: Layout.minimumWidth
     fullRepresentation: Row {
+        visible: root.finderActive
         spacing: 1
         Repeater {
             model: [

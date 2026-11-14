@@ -4,9 +4,9 @@ InactiveTextColor=95,95,95
 
 [Layout]
 TitleHeight=30
-ButtonWidth=16
-ButtonHeight=16
-ButtonSpacing=5
+ButtonWidth=14
+ButtonHeight=14
+ButtonSpacing=7
 TitleEdgeLeft=11
 TitleEdgeRight=11
 TitleEdgeTop=2

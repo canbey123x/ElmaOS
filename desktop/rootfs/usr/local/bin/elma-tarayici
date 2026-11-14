@@ -1,0 +1,125 @@
+#!/usr/bin/python3
+import sys
+from urllib.parse import urlencode
+
+from PyQt6.QtCore import QUrl, Qt
+from PyQt6.QtWebEngineCore import QWebEnginePage
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWidgets import (QApplication, QDockWidget, QLineEdit, QListWidget,
+                             QMainWindow, QTabWidget, QToolBar)
+
+app = QApplication(sys.argv)
+app.setDesktopFileName("elma-tarayici")
+window = QMainWindow()
+window.resize(1150, 730)
+tabs = QTabWidget()
+tabs.setDocumentMode(True)
+tabs.setTabsClosable(True)
+window.setCentralWidget(tabs)
+sidebar = QDockWidget("Sekmeler", window)
+sidebar.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+pages = QListWidget()
+sidebar.setWidget(pages)
+window.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, sidebar)
+bar = QToolBar()
+bar.setMovable(False)
+window.addToolBar(bar)
+address = QLineEdit()
+address.setPlaceholderText("Ara veya adres gir")
+address.setMaximumWidth(680)
+window.setStyleSheet("""
+QMainWindow, QToolBar { background: palette(window); }
+QToolBar { border: 0; padding: 7px; spacing: 7px; }
+QLineEdit { border: 1px solid palette(mid); border-radius: 8px;
+            padding: 6px 12px; background: palette(base); }
+QDockWidget { font-weight: bold; }
+QListWidget { border: 0; padding: 8px; background: palette(alternate-base); }
+""")
+
+def current():
+    return tabs.currentWidget()
+
+
+def refresh():
+    view = current()
+    if view:
+        address.setText(view.url().toDisplayString())
+        window.setWindowTitle(f"{view.title() or 'Başlangıç'} — Elma Tarayıcı")
+    pages.setCurrentRow(tabs.currentIndex())
+
+
+def title_changed(view, title):
+    index = tabs.indexOf(view)
+    if index >= 0:
+        label = title or "Yeni Sekme"
+        tabs.setTabText(index, label[:32])
+        pages.item(index).setText(label)
+        if view is current() and not address.hasFocus():
+            refresh()
+
+
+def add_tab(url=None):
+    view = QWebEngineView()
+    pages.addItem("Yeni Sekme")
+    tabs.addTab(view, "Yeni Sekme")
+    tabs.setCurrentWidget(view)
+    view.titleChanged.connect(lambda title: title_changed(view, title))
+    view.urlChanged.connect(lambda url: refresh() if view is current() else None)
+    view.page().newWindowRequested.connect(lambda request: request.openIn(add_tab().page()))
+    if url is None:
+        view.setHtml("""<body style="background:#f1ede6;font:18px sans-serif;text-align:center;padding-top:20vh">
+          <h1>Başlangıç Sayfası</h1><p><a href="https://www.wikipedia.org/">Wikipedia</a>
+          · <a href="https://duckduckgo.com/">DuckDuckGo</a></p></body>""")
+    else:
+        view.setUrl(url)
+    return view
+
+
+def close_tab(index):
+    view = tabs.widget(index)
+    pages.takeItem(index)
+    tabs.removeTab(index)
+    view.deleteLater()
+    if not tabs.count():
+        window.close()
+    else:
+        refresh()
+
+
+def navigate():
+    text = address.text().strip()
+    if not text:
+        return
+    if " " in text or ("." not in text and ":" not in text and text != "localhost"):
+        url = QUrl("https://duckduckgo.com/?" + urlencode({"q": text}))
+    else:
+        url = QUrl.fromUserInput(text)
+    if url.scheme() in ("http", "https"):
+        current().setUrl(url)
+        current().setFocus()
+
+
+def command(name, shortcut, callback):
+    action = bar.addAction(name)
+    action.setShortcut(shortcut)
+    action.triggered.connect(callback)
+    return action
+
+command("Kenar Çubuğu", "Ctrl+Shift+S", lambda: sidebar.setVisible(not sidebar.isVisible()))
+command("‹", "Alt+Left", lambda: current().back())
+command("›", "Alt+Right", lambda: current().forward())
+command("↻", "Ctrl+R", lambda: current().reload())
+bar.addWidget(address)
+command("+", "Ctrl+T", lambda: (add_tab(), address.setFocus()))
+file_menu = window.menuBar().addMenu("Dosya")
+file_menu.addAction("Yeni Sekme", lambda: add_tab())
+file_menu.addAction("Sekmeyi Kapat", lambda: close_tab(tabs.currentIndex()), "Ctrl+W")
+view_menu = window.menuBar().addMenu("Görünüm")
+view_menu.addAction("Adresi Seç", lambda: (address.setFocus(), address.selectAll()), "Ctrl+L")
+tabs.tabCloseRequested.connect(close_tab)
+tabs.currentChanged.connect(refresh)
+pages.currentRowChanged.connect(lambda index: tabs.setCurrentIndex(index) if index >= 0 else None)
+address.returnPressed.connect(navigate)
+add_tab(QUrl.fromUserInput(sys.argv[1]) if len(sys.argv) > 1 else None)
+window.show()
+sys.exit(app.exec())

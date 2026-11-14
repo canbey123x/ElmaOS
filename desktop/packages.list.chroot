@@ -2,3 +2,4 @@ python3-pyqt6
 python3-argon2
 kwin-common
 libnotify-bin
+python3-pyqt6.qtwebengine

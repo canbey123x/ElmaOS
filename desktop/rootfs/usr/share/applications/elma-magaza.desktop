@@ -2,6 +2,6 @@
 Type=Application
 Name=Elma Mağaza
 Exec=plasma-discover
-Icon=plasmadiscover
+Icon=/usr/share/pixmaps/elma-magaza.svg
 Terminal=false
 Categories=System;

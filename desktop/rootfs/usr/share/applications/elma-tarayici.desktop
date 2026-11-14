@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=Elma Tarayıcı
-Exec=firefox-esr
-Icon=firefox-esr
+Exec=/usr/local/bin/elma-tarayici %u
+Icon=/usr/share/pixmaps/elma-tarayici.svg
 Terminal=false
 Categories=Network;

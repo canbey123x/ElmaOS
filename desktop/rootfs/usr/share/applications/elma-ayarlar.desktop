@@ -2,6 +2,6 @@
 Type=Application
 Name=Elma Ayarlar
 Exec=/usr/local/bin/elma-ayarlar
-Icon=preferences-system
+Icon=/usr/share/pixmaps/elma-ayarlar.svg
 Terminal=false
 Categories=Settings;

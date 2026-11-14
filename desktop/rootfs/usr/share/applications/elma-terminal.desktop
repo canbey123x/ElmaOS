@@ -2,6 +2,6 @@
 Type=Application
 Name=Elma Terminal
 Exec=konsole
-Icon=utilities-terminal
+Icon=/usr/share/pixmaps/elma-terminal.svg
 Terminal=false
 Categories=System;

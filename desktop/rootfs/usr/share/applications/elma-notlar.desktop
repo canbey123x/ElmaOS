@@ -2,6 +2,6 @@
 Type=Application
 Name=Elma Notlar
 Exec=kate
-Icon=accessories-text-editor
+Icon=/usr/share/pixmaps/elma-notlar.svg
 Terminal=false
 Categories=Utility;

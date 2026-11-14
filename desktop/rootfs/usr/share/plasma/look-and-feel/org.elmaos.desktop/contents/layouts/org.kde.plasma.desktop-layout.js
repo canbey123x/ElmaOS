@@ -9,7 +9,11 @@ for (var i = 0; i < screens.length; i++) {
 var topBar = new Panel;
 topBar.location = "top";
 topBar.height = 28;
-topBar.addWidget("org.kde.plasma.kickoff");
+topBar.opacity = "translucent";
+var launcher = topBar.addWidget("org.kde.plasma.kickoff");
+launcher.currentConfigGroup = ["General"];
+launcher.writeConfig("icon", "/usr/share/pixmaps/elma-mark.svg");
+launcher.writeConfig("customButtonImage", "/usr/share/pixmaps/elma-mark.svg");
 topBar.addWidget("org.kde.plasma.appmenu");
 var space = topBar.addWidget("org.kde.plasma.panelspacer");
 space.currentConfigGroup = ["Configuration", "General"];
@@ -21,7 +25,7 @@ clock.writeConfig("showDate", true);
 
 var dock = new Panel;
 dock.location = "bottom";
-dock.height = 62;
+dock.height = 72;
 dock.floating = true;
 dock.alignment = "center";
 dock.lengthMode = "fit";

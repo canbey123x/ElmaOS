@@ -18,7 +18,7 @@ dolphin
 konsole
 kate
 plasma-discover
-plasma-discover-backend-packagekit
 packagekit
-policykit-1
+polkitd
+pkexec
 sudo
